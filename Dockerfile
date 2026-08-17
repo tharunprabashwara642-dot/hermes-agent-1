@@ -1,6 +1,7 @@
-FROM nousresearch/hermes-agent:v2026.8.3
-
-COPY start.sh /opt/hermes/railway-start.sh
-RUN chmod +x /opt/hermes/railway-start.sh
-
-CMD ["/opt/hermes/railway-start.sh"]
+FROM python:3.10-slim
+ENV TZ=Asia/Colombo
+RUN apt-get update && apt-get install -y tzdata && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir -r requirements.txt || true
+CMD ["bash", "start.sh"]
