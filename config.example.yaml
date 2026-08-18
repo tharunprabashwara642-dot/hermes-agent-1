@@ -1,0 +1,50 @@
+# ============================================================
+# Tharun AI Assistant — configuration
+# Copy this file to /opt/data/config.yaml (or set CONFIG_PATH)
+# and fill in your own values / environment variables.
+# ============================================================
+
+name: "Tharun AI Assistant"
+
+# ---- LLM provider ------------------------------------------------
+# provider can be: openai, anthropic, gemini, openrouter, or "custom"
+# (custom = any OpenAI-compatible /chat/completions endpoint via base_url)
+provider: gemini
+model: gemini-3.1-flash-lite
+api_key: ${GEMINI_API_KEY}
+base_url: null          # only needed for provider: custom / openrouter
+temperature: 0.4
+
+# ---- Agent loop behaviour -----------------------------------------
+agent:
+  max_iterations: 50          # hard ceiling so it never spins forever
+  max_retries_per_step: 4     # how many times to self-repair one failing step
+  retry_backoff_seconds: 2    # base backoff, doubles each retry
+  stop_on_unrecoverable: true # only stops if a step fails after all retries
+  log_file: /opt/data/agent.log
+
+# ---- MCP servers ----------------------------------------------------
+# Each entry is a Model Context Protocol server the agent can call tools on.
+# Tokens/secrets should be provided via environment variables, never hard-coded.
+mcp_servers:
+  - name: filesystem
+    enabled: true
+    transport: stdio
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-filesystem", "/opt/data"]
+    env: {}
+
+  - name: fetch
+    enabled: true
+    transport: stdio
+    command: uvx
+    args: ["mcp-server-fetch"]
+    env: {}
+
+  # Example of a remote MCP server that needs a bearer token
+  - name: remote-example
+    enabled: false
+    transport: http
+    url: "https://example.com/mcp"
+    token: ${REMOTE_MCP_TOKEN}
+    env: {}
